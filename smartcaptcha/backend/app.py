@@ -41,9 +41,8 @@ def verify(payload: dict):
         payload["task_completion_time"] < 1.0
     ):
         return {
-            "decision": "bot",
-            "confidence": 0.0,
-            "mode": "rule-blocked"
+            "prediction": "Bot",
+            "confidence": 1.0
         }
 
     # ---------------------------
@@ -51,9 +50,8 @@ def verify(payload: dict):
     # ---------------------------
     if not MODEL_LOADED:
         return {
-            "decision": "human",
-            "confidence": 0.5,
-            "mode": "fallback"
+            "prediction": "Human",
+            "confidence": 0.5
         }
 
     # ---------------------------
@@ -67,15 +65,13 @@ def verify(payload: dict):
         payload["idle_time"]
     ]]
 
-    confidence = float(model.predict_proba(features)[0][1])
+    prediction = model.predict(features)[0]
 
-    # ---------------------------
-    # FINAL DECISION
-    # ---------------------------
-    decision = "human" if confidence >= 0.65 else "bot"
+    proba = model.predict_proba(features)[0]
+
+    confidence = max(proba)
 
     return {
-        "decision": decision,
-        "confidence": round(confidence, 3),
-        "mode": "ml-enabled"
+        "prediction": "Human" if prediction == 1 else "Bot",
+        "confidence": round(float(confidence), 4)
     }

@@ -674,8 +674,8 @@
         setStatus('Verifying...');
         verifyWithBackend(features)
           .then((result) => {
-            const decision = (result && (result.decision ?? result.status)) || '';
-            if (decision === 'human') {
+            const decision = (result && (result.prediction ?? result.decision ?? result.status)) || '';
+            if (decision.toLowerCase() === 'human') {
               setStatus('Verified: Human');
               return;
             }

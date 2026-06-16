@@ -17,6 +17,6 @@ def root():
 @app.post("/verify")
 def verify(payload: dict):
     return {
-        "decision": "human",
+        "prediction": "Human",
         "confidence": 0.99
     }

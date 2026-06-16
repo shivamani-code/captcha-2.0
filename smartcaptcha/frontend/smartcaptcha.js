@@ -58,8 +58,8 @@
       });
 
       const data = await response.json();
-
-      if (data.decision === "human") {
+      const decision = data.prediction ?? data.decision ?? "";
+      if (decision.toLowerCase() === "human") {
         window.location.href = "/success.html";
       } else {
         resultText.innerText = "Verification failed. Try again.";
