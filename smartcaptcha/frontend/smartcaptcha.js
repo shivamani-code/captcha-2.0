@@ -1,6 +1,6 @@
 (function () {
-  const API_URL = "http://localhost:8000/verify";
-  const CHALLENGE_URL = "http://localhost:8000/challenge";
+  const API_URL = "https://captcha-2-0-5.onrender.com/verify";
+  const CHALLENGE_URL = "https://captcha-2-0-5.onrender.com/challenge";
   const slider = document.getElementById("slider");
   const resultText = document.getElementById("result");
 
