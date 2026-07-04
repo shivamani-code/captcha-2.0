@@ -1,0 +1,17 @@
+name: Keep SwipeTCHA Backend Awake
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping-backend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ping SwipeTCHA Render Backend
+        run: |
+          echo "Pinging SwipeTCHA backend..."
+          curl -fsS https://captcha-2-0-5.onrender.com/health
+          echo "Backend ping successful"
