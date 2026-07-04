@@ -2,8 +2,8 @@
   const root = document.getElementById('smartcaptcha-root') || document.getElementById('slider');
   const statusEl = document.getElementById('smartcaptcha-status') || document.getElementById('result');
   const resetBtn = document.getElementById('smartcaptcha-reset');
-  const VERIFY_ENDPOINT = 'http://localhost:8000/verify';
-  const CHALLENGE_ENDPOINT = 'http://localhost:8000/challenge';
+  const VERIFY_ENDPOINT = 'https://captcha-2-0-5.onrender.com/verify';
+  const CHALLENGE_ENDPOINT = 'https://captcha-2-0-5.onrender.com/challenge';
   const FEATURE_COLUMNS = [
     'avg_mouse_speed',
     'mouse_path_entropy',
