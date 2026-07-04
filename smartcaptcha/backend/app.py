@@ -7,6 +7,19 @@ import time
 
 app = FastAPI()
 
+# --------------------------------------------------
+# CORS SETTINGS
+# --------------------------------------------------
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# --------------------------------------------------
+# CHALLENGE TOKEN STORAGE
+# --------------------------------------------------
 challenges = {}
 
 def cleanup_challenges():
@@ -15,6 +28,23 @@ def cleanup_challenges():
     for cid in expired:
         challenges.pop(cid, None)
 
+
+# --------------------------------------------------
+# HEALTH CHECK ENDPOINT
+# Use this for Render keep-alive ping services
+# --------------------------------------------------
+@app.get("/health")
+def health():
+    return {
+        "status": "ok",
+        "service": "SwipeTCHA backend",
+        "model_loaded": MODEL_LOADED if "MODEL_LOADED" in globals() else False
+    }
+
+
+# --------------------------------------------------
+# CHALLENGE ENDPOINT
+# --------------------------------------------------
 @app.get("/challenge")
 def get_challenge():
     cleanup_challenges()
@@ -23,13 +53,9 @@ def get_challenge():
     return {"challenge_id": challenge_id}
 
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
+# --------------------------------------------------
+# MODEL CONFIG
+# --------------------------------------------------
 MODEL_PATH = "captcha_model.pkl"
 
 # All 10 features the frontend sends — must match train_model.py FEATURE_COLUMNS
@@ -57,6 +83,9 @@ else:
     print("[WARN] ML model missing — running in safe fallback mode")
 
 
+# --------------------------------------------------
+# ROOT ENDPOINT
+# --------------------------------------------------
 @app.get("/")
 def root():
     return {
@@ -66,44 +95,52 @@ def root():
     }
 
 
+# --------------------------------------------------
+# VERIFY ENDPOINT
+# --------------------------------------------------
 @app.post("/verify")
 def verify(payload: dict):
     cleanup_challenges()
+
+    # --------------------------------------------------
+    # CHALLENGE VALIDATION
+    # --------------------------------------------------
     challenge_id = payload.get("challenge_id")
+
     if not challenge_id:
         raise HTTPException(status_code=400, detail="Missing challenge_id")
-    
+
     if challenge_id not in challenges:
         raise HTTPException(status_code=403, detail="Invalid or expired challenge_id")
-    
+
     creation_time = challenges.pop(challenge_id)
+
     if time.time() - creation_time > 300:
         raise HTTPException(status_code=403, detail="Expired challenge_id")
 
-
-    # ------------------------------------------------------------------
-    # HARD BOT RULE (FIRST GATE)
-    # Catches naive automation before it even reaches the ML model.
-    # Requires ALL four indicators simultaneously to avoid false positives.
-    # ------------------------------------------------------------------
+    # --------------------------------------------------
+    # HARD BOT RULE FIRST GATE
+    # Catches naive automation before ML model.
+    # --------------------------------------------------
     try:
-        speed     = float(payload.get("avg_mouse_speed", 0))
-        entropy   = float(payload.get("mouse_path_entropy", 1))
-        delay     = float(payload.get("click_delay", 1))
-        dur       = float(payload.get("task_completion_time", 1))
-        jitter    = float(payload.get("micro_jitter_variance", 1))
-        timing_h  = float(payload.get("timing_entropy", 1))
+        speed = float(payload.get("avg_mouse_speed", 0))
+        entropy = float(payload.get("mouse_path_entropy", 1))
+        delay = float(payload.get("click_delay", 1))
+        dur = float(payload.get("task_completion_time", 1))
+        jitter = float(payload.get("micro_jitter_variance", 1))
+        timing_h = float(payload.get("timing_entropy", 1))
     except (TypeError, ValueError) as exc:
         raise HTTPException(status_code=422, detail=f"Invalid feature value: {exc}")
 
     naive_bot = (
-        speed   > 2.2 and
+        speed > 2.2 and
         entropy < 0.08 and
-        delay   < 0.2 and
-        dur     < 0.8 and
-        jitter  < 0.2 and
+        delay < 0.2 and
+        dur < 0.8 and
+        jitter < 0.2 and
         timing_h < 0.10
     )
+
     if naive_bot:
         return {
             "prediction": "Bot",
@@ -111,9 +148,9 @@ def verify(payload: dict):
             "gate": "hard_rule",
         }
 
-    # ------------------------------------------------------------------
-    # SAFE FALLBACK (NO MODEL)
-    # ------------------------------------------------------------------
+    # --------------------------------------------------
+    # SAFE FALLBACK IF MODEL IS MISSING
+    # --------------------------------------------------
     if not MODEL_LOADED:
         return {
             "prediction": "Human",
@@ -121,10 +158,10 @@ def verify(payload: dict):
             "gate": "fallback",
         }
 
-    # ------------------------------------------------------------------
-    # ML PREDICTION — all 10 features in exact training order
-    # Missing features default to 0.0 (safe for tree-based models).
-    # ------------------------------------------------------------------
+    # --------------------------------------------------
+    # ML PREDICTION
+    # Uses all 10 features in exact training order.
+    # --------------------------------------------------
     try:
         feature_vector = [[
             float(payload.get(col, 0.0)) for col in FEATURE_COLUMNS
@@ -133,7 +170,7 @@ def verify(payload: dict):
         raise HTTPException(status_code=422, detail=f"Feature extraction error: {exc}")
 
     prediction = model.predict(feature_vector)[0]
-    proba      = model.predict_proba(feature_vector)[0]
+    proba = model.predict_proba(feature_vector)[0]
     confidence = float(max(proba))
 
     return {
