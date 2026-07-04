@@ -1,0 +1,70 @@
+{
+  "dataset": "merged_behavior_data.csv",
+  "n_samples": 6366,
+  "n_features": 10,
+  "features": [
+    "avg_mouse_speed",
+    "mouse_path_entropy",
+    "click_delay",
+    "task_completion_time",
+    "idle_time",
+    "micro_jitter_variance",
+    "acceleration_curve",
+    "curvature_variance",
+    "overshoot_correction_ratio",
+    "timing_entropy"
+  ],
+  "n_estimators": 200,
+  "max_depth": 10,
+  "test_set": {
+    "accuracy": 0.995,
+    "precision": 0.9964,
+    "recall": 0.994,
+    "f1": 0.9952,
+    "roc_auc": 0.9999,
+    "confusion_matrix": [
+      [
+        762,
+        3
+      ],
+      [
+        5,
+        822
+      ]
+    ]
+  },
+  "cross_validation_5fold": {
+    "accuracy": {
+      "mean": 0.9939,
+      "std": 0.0017
+    },
+    "precision": {
+      "mean": 0.9919,
+      "std": 0.0012
+    },
+    "recall": {
+      "mean": 0.9964,
+      "std": 0.0034
+    },
+    "f1": {
+      "mean": 0.9941,
+      "std": 0.0017
+    },
+    "roc_auc": {
+      "mean": 0.9998,
+      "std": 0.0001
+    }
+  },
+  "feature_importance": {
+    "acceleration_curve": 0.287486,
+    "mouse_path_entropy": 0.156932,
+    "micro_jitter_variance": 0.12978,
+    "timing_entropy": 0.11495,
+    "curvature_variance": 0.10804,
+    "idle_time": 0.097746,
+    "avg_mouse_speed": 0.036006,
+    "overshoot_correction_ratio": 0.033375,
+    "task_completion_time": 0.028505,
+    "click_delay": 0.007179
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "acceleration_curve": 0.28748631668096963,
+  "mouse_path_entropy": 0.15693163170070226,
+  "micro_jitter_variance": 0.12978025288422845,
+  "timing_entropy": 0.11494980244693606,
+  "curvature_variance": 0.10804040960605196,
+  "idle_time": 0.09774594214603308,
+  "avg_mouse_speed": 0.036006496819933585,
+  "overshoot_correction_ratio": 0.03337462962234785,
+  "task_completion_time": 0.02850521967275091,
+  "click_delay": 0.007179298420046194
+}

@@ -1,3 +1,4 @@
+import uuid
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -13,6 +14,10 @@ app.add_middleware(
 @app.get("/")
 def root():
     return {"status": "backend alive"}
+
+@app.get("/challenge")
+def challenge():
+    return {"challenge_id": str(uuid.uuid4())}
 
 @app.post("/verify")
 def verify(payload: dict):

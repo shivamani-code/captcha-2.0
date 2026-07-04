@@ -1,0 +1,45 @@
+{
+  "stress_test": {
+    "human": {
+      "attempts": 15,
+      "accepted": 15,
+      "rejected": 0
+    },
+    "bot": {
+      "attempts": 15,
+      "accepted": 0,
+      "rejected": 15
+    }
+  },
+  "security": {
+    "missing_id": {
+      "status": 400,
+      "response": {
+        "detail": "Missing challenge_id"
+      },
+      "passed": true
+    },
+    "fake_id": {
+      "status": 403,
+      "response": {
+        "detail": "Invalid or expired challenge_id"
+      },
+      "passed": true
+    },
+    "reused_id": {
+      "status_first": 200,
+      "status_second": 403,
+      "response_second": {
+        "detail": "Invalid or expired challenge_id"
+      },
+      "passed": true
+    },
+    "expired_id": {
+      "status": 403,
+      "response": {
+        "detail": "Invalid or expired challenge_id"
+      },
+      "passed": true
+    }
+  }
+}

@@ -35,7 +35,7 @@
     if (!mount) return;
 
     var cssUrl = resolveAssetUrl('/style.css?v=2');
-    var jsUrl = resolveAssetUrl('/smartcaptcha.js?v=2');
+    var jsUrl = resolveAssetUrl('/smartcaptcha.js?v=3');
     var fbUrl = resolveAssetUrl('/firebaseFeedback.js?v=2');
     var fbModalUrl = resolveAssetUrl('/feedbackModal.js?v=2');
 
@@ -129,9 +129,9 @@
     doc += 'function genToken(){try{if(window.crypto&&window.crypto.getRandomValues){var a=new Uint8Array(16);window.crypto.getRandomValues(a);var s="";for(var i=0;i<a.length;i++){s+=a[i].toString(16).padStart(2,"0");}return s;} }catch(_){};return (String(Math.random()).slice(2)+String(Date.now()));}';
     doc += 'var sentOk=false;var sentFail=false;';
     doc += 'function check(){try{var el=document.getElementById("smartcaptcha-status");if(!el)return;var t=(el.textContent||"").trim();';
-    doc += 'if(t==="Verified: Human"&&!sentOk){sentOk=true;sentFail=false;var tok=window.__SMARTCAPTCHA_WIDGET_VERIFICATION_TOKEN__||"";if(!tok){tok=genToken();window.__SMARTCAPTCHA_WIDGET_VERIFICATION_TOKEN__=tok;}safePost({type:"SMARTCAPTCHA_VERIFIED",success:true,token:String(tok)});}';
-    doc += 'if(t==="Verification failed. Try again."&&!sentFail){sentFail=true;sentOk=false;safePost({type:"SMARTCAPTCHA_FAILED",success:false});}';
-    doc += 'if(t===""||t==="Try again."||t==="Verifying..."){sentFail=false;}';
+    doc += 'if(t.indexOf("Verified: Human")===0&&!sentOk){sentOk=true;sentFail=false;var tok=window.__SMARTCAPTCHA_WIDGET_VERIFICATION_TOKEN__||"";if(!tok){tok=genToken();window.__SMARTCAPTCHA_WIDGET_VERIFICATION_TOKEN__=tok;}safePost({type:"SMARTCAPTCHA_VERIFIED",success:true,token:String(tok)});}';
+    doc += 'if(t.indexOf("Verification failed.")===0&&!sentFail){sentFail=true;sentOk=false;safePost({type:"SMARTCAPTCHA_FAILED",success:false});}';
+    doc += 'if(t===""||t==="Try again."||t==="Verifying..."||t.indexOf("Try again.")!==-1){sentFail=false;}';
     doc += '}catch(_){}}';
     doc += 'function start(){try{check();var el=document.getElementById("smartcaptcha-status");if(!el)return;new MutationObserver(check).observe(el,{subtree:true,childList:true,characterData:true});}catch(_){}}';
     doc += 'if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",start);}else{start();}';

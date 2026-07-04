@@ -2,9 +2,8 @@
   const root = document.getElementById('smartcaptcha-root') || document.getElementById('slider');
   const statusEl = document.getElementById('smartcaptcha-status') || document.getElementById('result');
   const resetBtn = document.getElementById('smartcaptcha-reset');
-
-  const VERIFY_ENDPOINT = 'https://captcha-2-fix9.onrender.com/verify';
-
+  const VERIFY_ENDPOINT = 'http://localhost:8000/verify';
+  const CHALLENGE_ENDPOINT = 'http://localhost:8000/challenge';
   const FEATURE_COLUMNS = [
     'avg_mouse_speed',
     'mouse_path_entropy',
@@ -395,8 +394,9 @@
     return featureVector;
   }
 
-  async function verifyWithBackend(features) {
+  async function verifyWithBackend(features, challengeId) {
     const payload = buildVerifyPayload(features);
+    payload.challenge_id = challengeId;
     const res = await fetch(VERIFY_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -496,7 +496,17 @@
       pendingBeginEvt: null,
       rafId: 0,
       needsRender: false,
+      challengeId: null,
     };
+
+    fetch(CHALLENGE_ENDPOINT)
+      .then(res => res.json())
+      .then(data => {
+        state.challengeId = data.challenge_id;
+      })
+      .catch(err => {
+        console.error('Failed to fetch challenge ID:', err);
+      });
 
     state.minX = state.startOffsetPx;
     state.currentX = state.minX;
@@ -671,20 +681,29 @@
           return;
         }
 
+        if (!state.challengeId) {
+          setStatus('Verification error: Challenge ID not loaded yet. Try again.');
+          window.setTimeout(() => {
+            render();
+          }, 1000);
+          return;
+        }
+
         setStatus('Verifying...');
-        verifyWithBackend(features)
+        verifyWithBackend(features, state.challengeId)
           .then((result) => {
             const decision = (result && (result.prediction ?? result.decision ?? result.status)) || '';
+            const confidence = (result && result.confidence !== undefined) ? (result.confidence * 100).toFixed(2) + '%' : 'N/A';
             if (decision.toLowerCase() === 'human') {
-              setStatus('Verified: Human');
+              setStatus(`Verified: Human (Confidence: ${confidence})`);
               return;
             }
 
-            setStatus('Verification failed. Try again.');
+            setStatus(`Verification failed. Bot detected (Confidence: ${confidence}). Try again.`);
             window.setTimeout(() => {
               render();
               setStatus('Try again.');
-            }, 250);
+            }, 2000);
           })
           .catch((err) => {
             setStatus(`Verification error: ${err.message}`);

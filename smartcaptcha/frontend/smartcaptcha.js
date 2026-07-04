@@ -1,6 +1,6 @@
 (function () {
-  const API_URL = "https://captcha-2-fix9.onrender.com/verify";
-
+  const API_URL = "http://localhost:8000/verify";
+  const CHALLENGE_URL = "http://localhost:8000/challenge";
   const slider = document.getElementById("slider");
   const resultText = document.getElementById("result");
 
@@ -10,6 +10,19 @@
   let lastMoveTime = null;
   let idleTime = 0;
   let isDragging = false;
+  let challengeId = null;
+
+  async function loadChallenge() {
+    try {
+      const res = await fetch(CHALLENGE_URL);
+      const data = await res.json();
+      challengeId = data.challenge_id;
+    } catch (err) {
+      console.error("Failed to load challenge ID:", err);
+    }
+  }
+
+  loadChallenge();
 
   slider.addEventListener("mousedown", () => {
     positions = [];
@@ -43,10 +56,18 @@
 
     if (positions.length < 5) {
       resultText.innerText = "Verification failed. Try again.";
+      loadChallenge();
+      return;
+    }
+
+    if (!challengeId) {
+      resultText.innerText = "Challenge ID not loaded. Please wait and try again.";
+      loadChallenge();
       return;
     }
 
     const payload = computeBehavioralFeatures();
+    payload.challenge_id = challengeId;
 
     console.log("SmartCAPTCHA payload:", payload);
 
@@ -59,14 +80,17 @@
 
       const data = await response.json();
       const decision = data.prediction ?? data.decision ?? "";
+      const confidence = data.confidence !== undefined ? (data.confidence * 100).toFixed(2) + "%" : "N/A";
       if (decision.toLowerCase() === "human") {
         window.location.href = "/success.html";
       } else {
-        resultText.innerText = "Verification failed. Try again.";
+        resultText.innerText = `Verification failed. Bot detected (Confidence: ${confidence}). Try again.`;
+        loadChallenge();
       }
 
     } catch (err) {
       resultText.innerText = "Network error. Please retry.";
+      loadChallenge();
     }
   });
 
